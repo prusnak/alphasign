@@ -1,0 +1,7 @@
+Driver for Alpha 215C LED display
+
+- inspired by:
+    http://wls.wwco.com/ledsigns/alpha/215c.html
+
+- protocol described here:
+    http://wls.wwco.com/ledsigns/alpha/protocol.html
