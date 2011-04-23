@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import serial
 
 class Alpha215C:
