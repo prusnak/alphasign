@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-from alphasign import AlphaSign
+from alphasign import *
 
 dev = AlphaSign()
 
-dev.hold('It works!')
+dev.hold('It ' + GREEN + BOLD + 'works ' + NOBOLD + YELLOW +'!!!')

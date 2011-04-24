@@ -1,5 +1,20 @@
 import serial
 
+RED = '\x1C1'
+GREEN = '\x1C2'
+AMBER = '\x1C3'
+DIMRED = '\x1C4'
+DIMGREEN = '\x1C5'
+BROWN = '\x1C6'
+ORANGE = '\x1C7'
+YELLOW = '\x1C8'
+RAINBOW1 = '\x1C9'
+RAINBOW2 = '\x1CA'
+COLORMIX = '\x1CB'
+AUTOCOLOR = '\x1CC'
+BOLD = '\x1D01'
+NOBOLD = '\x1D00'
+
 class AlphaSign:
 
     def __init__(self, port = '/dev/ttyUSB0'):
@@ -17,6 +32,7 @@ class AlphaSign:
         s += '\x1B'     # start of text
         s += ' '        # use middle line (irrelevant on singleline display)
         s += mode       # display mode
+        s += '\x1C1'    # set default color = red
         s += string     # text to display
         s += '\x04'     # end of transmission
         self.ser.write(s)
