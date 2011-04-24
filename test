@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-from alpha215c import Alpha215C
+from alphasign import AlphaSign
 
-dev = Alpha215C()
-dev.show('Alpha215C!')
+dev = AlphaSign()
+
+dev.hold('It works!')
