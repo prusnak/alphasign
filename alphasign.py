@@ -14,6 +14,8 @@ COLORMIX = '\x1CB'
 AUTOCOLOR = '\x1CC'
 BOLD = '\x1D01'
 NOBOLD = '\x1D00'
+STRING = '\x10'
+IMAGE = '\x14'
 
 class AlphaSign:
 
@@ -21,21 +23,42 @@ class AlphaSign:
         # defaults: 9600, 8bits, none parity, one stopbit
         self.ser = serial.Serial(port = port)
 
-    def text(self, mode, string):
+    def raw(self, data):
         s  = 5 * '\x00' # packet sync characters
         s += '\x01'     # start of header
         s += 'Z'        # all types
         s += '00'       # broadcast address
         s += '\x02'     # start of text
-        s += 'A'        # text mode
+        s += data       # raw data
+        s += '\x04'     # end of transmission
+        self.ser.write(s)
+
+    def setstring(self, label, string):
+        s  = 'G'        # set string mode
+        s += label
+        s += string
+        self.raw(s)
+
+    def setimage(self, label, data):
+        h = len(data)
+        w = len(data[0])
+        s = 'I'
+        s += label
+        s += chr(h >> 16) + chr(h & 0xFF) # height - 16 bit int
+        s += chr(w >> 16) + chr(w & 0xFF) # width - 16 bit int
+        for rows in data:
+            s += rows + '\r\n' # row of data
+        self.raw(s)
+
+    def text(self, mode, string):
+        s  = 'A'        # text mode
         s += 'A'        # file label
         s += '\x1B'     # start of text
         s += ' '        # use middle line (irrelevant on singleline display)
         s += mode       # display mode
         s += '\x1C1'    # set default color = red
         s += string     # text to display
-        s += '\x04'     # end of transmission
-        self.ser.write(s)
+        self.raw(s)
 
     def clear(self):
         self.text('@', '')
