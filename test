@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from alphasign import *
+import time
 
 dev = AlphaSign()
 

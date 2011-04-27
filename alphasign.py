@@ -14,14 +14,16 @@ COLORMIX = '\x1CB'
 AUTOCOLOR = '\x1CC'
 BOLD = '\x1D01'
 NOBOLD = '\x1D00'
-STRING = '\x10'
-IMAGE = '\x14'
+STRING = '\x10B'
+IMAGE = '\x14C'
 
 class AlphaSign:
 
     def __init__(self, port = '/dev/ttyUSB0'):
         # defaults: 9600, 8bits, none parity, one stopbit
         self.ser = serial.Serial(port = port)
+        # set memory configuration
+        self.raw('E$' + 'AAU0100FF00' + 'CDU075A2000' + 'BBL000F0000')
 
     def raw(self, data):
         s  = 5 * '\x00' # packet sync characters
@@ -33,21 +35,21 @@ class AlphaSign:
         s += '\x04'     # end of transmission
         self.ser.write(s)
 
-    def setstring(self, label, string):
+    def string(self, string):
         s  = 'G'        # set string mode
-        s += label
-        s += string
+        s += 'B'        # label
+        s += string     # data
         self.raw(s)
 
-    def setimage(self, label, data):
+    def image(self, data):
         h = len(data)
         w = len(data[0])
-        s = 'I'
-        s += label
-        s += chr(h >> 16) + chr(h & 0xFF) # height - 16 bit int
-        s += chr(w >> 16) + chr(w & 0xFF) # width - 16 bit int
+        s  = 'I'                # mode - dots
+        s += 'C'                # label
+        s += chr(h)             # height
+        s += chr(w)             # width
         for rows in data:
-            s += rows + '\r\n' # row of data
+            s += rows + '\r\n'  # row of data
         self.raw(s)
 
     def text(self, mode, string):
@@ -58,6 +60,17 @@ class AlphaSign:
         s += mode       # display mode
         s += '\x1C1'    # set default color = red
         s += string     # text to display
+        self.raw(s)
+
+    def beep(self):
+        s  = 'E'  # special function
+        s += '('  # speaker tone
+        s += '0'  # beep for 2 seconds
+        self.raw(s)
+
+    def reset(self):
+        s  = 'E'  # special function
+        s += '$'  # clear memory configuration
         self.raw(s)
 
     def clear(self):
