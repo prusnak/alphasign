@@ -1,0 +1,28 @@
+#!/usr/bin/python
+from alphasign import *
+import json
+import urllib2
+import time
+
+url = 'http://search.twitter.com/search.json?q=%40brmlab'
+
+dev = AlphaSign()
+dev.hold('@brmlab tweeter')
+last_ts = 0
+
+while True:
+    f = urllib2.urlopen(url)
+    data = json.loads(f.read())['results']
+    f.close()
+    if len(data) > 0:
+        data = data[0]
+        user = data['from_user']
+        text = data['text']
+        ts = time.mktime(time.strptime(data['created_at'][:-6], "%a, %d %b %Y %H:%M:%S"))
+        if ts <= last_ts:
+            continue
+        last_ts = ts
+        text = text.replace('@brmlab', YELLOW + '@brmlab' + GREEN)
+        dev.rotate(RED + '@' + user + ': ' + GREEN + text)
+        print ts, '@' + user, text
+    time.sleep(30)
