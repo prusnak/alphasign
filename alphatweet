@@ -3,26 +3,41 @@ from alphasign import *
 import json
 import urllib2
 import time
+import threading
+import Queue
 
-url = 'http://search.twitter.com/search.json?q=%40brmlab'
+queue = Queue.Queue()
 
-dev = AlphaSign()
-dev.hold('@brmlab tweeter')
-last_ts = 0
+def twitter_loop(q):
+    url = 'http://search.twitter.com/search.json?q=%40brmlab'
+    last_ts = time.time()
+    while True:
+        f = urllib2.urlopen(url)
+        data = json.loads(f.read())['results']
+        f.close()
+        for row in data:
+            user = row['from_user']
+            text = row['text']
+            ts = time.mktime(time.strptime(row['created_at'][:-6] + " UTC", "%a, %d %b %Y %H:%M:%S %Z"))
+            if ts > last_ts:
+                last_ts = ts
+                q.put((user,text))
+                print '<<<< @' + user, text
+            else:
+                print 'old: @' + user, text
+        time.sleep(30)
 
-while True:
-    f = urllib2.urlopen(url)
-    data = json.loads(f.read())['results']
-    f.close()
-    if len(data) > 0:
-        data = data[0]
-        user = data['from_user']
-        text = data['text']
-        ts = time.mktime(time.strptime(data['created_at'][:-6], "%a, %d %b %Y %H:%M:%S"))
-        if ts <= last_ts:
-            continue
-        last_ts = ts
-        text = text.replace('@brmlab', YELLOW + '@brmlab' + GREEN)
-        dev.rotate(RED + '@' + user + ': ' + GREEN + text)
-        print ts, '@' + user, text
-    time.sleep(30)
+def alphasign_loop(q):
+    dev = AlphaSign()
+    while True:
+        if not q.empty():
+            (user,text) = q.get()
+            dev.rotate(RED + '@' + user + ': ' + GREEN + text.replace('@brmlab', YELLOW + '@brmlab' + GREEN))
+            print '>>>> @' + user, text
+        else:
+            dev.hold(GREEN + 'tweet to ' + RED + '@brmlab')
+        time.sleep(20)
+
+
+threading.Thread(target=twitter_loop, args=[queue]).start()
+threading.Thread(target=alphasign_loop, args=[queue]).start()
