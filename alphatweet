@@ -10,7 +10,7 @@ queue = Queue.Queue()
 
 def twitter_loop(q):
     url = 'http://search.twitter.com/search.json?q=%40brmlab'
-    last_ts = time.time() - 7200.0 # UTC vs CEST
+    used_ids = []
     while True:
         f = urllib2.urlopen(url)
         data = json.loads(f.read())['results']
@@ -18,10 +18,10 @@ def twitter_loop(q):
         for row in data:
             user = row['from_user']
             text = row['text']
-            ts = time.mktime(time.strptime(row['created_at'][:-6], "%a, %d %b %Y %H:%M:%S"))
-            if ts > last_ts:
-                last_ts = ts
+            msgid = row['id']
+            if not msgid in used_ids:
                 q.put((user,text))
+                used_ids.append(msgid)
                 print '<<<< @' + user, text
             else:
                 print 'old: @' + user, text
